@@ -35,6 +35,11 @@ SentinelConnectionPool
 .. autoclass:: redis.sentinel.SentinelConnectionPool
     :members:
 
+SentinelBlockingConnectionPool
+======================
+.. autoclass:: redis.sentinel.SentinelBlockingConnectionPool
+    :members:
+
 
 Cluster Client
 **************

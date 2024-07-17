@@ -4,7 +4,12 @@ from typing import Optional
 
 from redis.client import Redis
 from redis.commands import SentinelCommands
-from redis.connection import Connection, ConnectionPool, SSLConnection
+from redis.connection import (
+    BlockingConnectionPool,
+    Connection,
+    ConnectionPool,
+    SSLConnection,
+)
 from redis.exceptions import ConnectionError, ReadOnlyError, ResponseError, TimeoutError
 from redis.utils import str_if_bytes
 
@@ -134,14 +139,7 @@ class SentinelConnectionPoolProxy:
         raise SlaveNotFoundError(f"No slave found for {self.service_name!r}")
 
 
-class SentinelConnectionPool(ConnectionPool):
-    """
-    Sentinel backed connection pool.
-
-    If ``check_connection`` flag is set to True, SentinelManagedConnection
-    sends a PING command right after establishing the connection.
-    """
-
+class _SentinelConnectionPoolMixin:
     def __init__(self, service_name, sentinel_manager, **kwargs):
         kwargs["connection_class"] = kwargs.get(
             "connection_class",
@@ -193,6 +191,27 @@ class SentinelConnectionPool(ConnectionPool):
     def rotate_slaves(self):
         "Round-robin slave balancer"
         return self.proxy.rotate_slaves()
+
+
+class SentinelConnectionPool(_SentinelConnectionPoolMixin, ConnectionPool):
+    """
+    Sentinel backed connection pool.
+
+    If ``check_connection`` flag is set to True, SentinelManagedConnection
+    sends a PING command right after establishing the connection.
+    """
+
+
+class SentinelBlockingConnectionPool(
+    _SentinelConnectionPoolMixin,
+    BlockingConnectionPool,
+):
+    """
+    Sentinel blocking connection pool.
+
+    If ``check_connection`` flag is set to True, SentinelManagedConnection
+    sends a PING command right after establishing the connection.
+    """
 
 
 class Sentinel(SentinelCommands):

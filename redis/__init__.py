@@ -30,6 +30,7 @@ from redis.exceptions import (
 )
 from redis.sentinel import (
     Sentinel,
+    SentinelBlockingConnectionPool,
     SentinelConnectionPool,
     SentinelManagedConnection,
     SentinelManagedSSLConnection,
@@ -77,6 +78,7 @@ __all__ = [
     "RedisError",
     "ResponseError",
     "Sentinel",
+    "SentinelBlockingConnectionPool",
     "SentinelConnectionPool",
     "SentinelManagedConnection",
     "SentinelManagedSSLConnection",

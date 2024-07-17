@@ -5,6 +5,7 @@ from typing import AsyncIterator, Iterable, Mapping, Optional, Sequence, Tuple, 
 
 from redis.asyncio.client import Redis
 from redis.asyncio.connection import (
+    BlockingConnectionPool,
     Connection,
     ConnectionPool,
     EncodableT,
@@ -97,14 +98,7 @@ class SentinelManagedSSLConnection(SentinelManagedConnection, SSLConnection):
     pass
 
 
-class SentinelConnectionPool(ConnectionPool):
-    """
-    Sentinel backed connection pool.
-
-    If ``check_connection`` flag is set to True, SentinelManagedConnection
-    sends a PING command right after establishing the connection.
-    """
-
+class _SentinelConnectionPoolMixin:
     def __init__(self, service_name, sentinel_manager, **kwargs):
         kwargs["connection_class"] = kwargs.get(
             "connection_class",
@@ -166,6 +160,27 @@ class SentinelConnectionPool(ConnectionPool):
         except MasterNotFoundError:
             pass
         raise SlaveNotFoundError(f"No slave found for {self.service_name!r}")
+
+
+class SentinelConnectionPool(_SentinelConnectionPoolMixin, ConnectionPool):
+    """
+    Sentinel backed connection pool.
+
+    If ``check_connection`` flag is set to True, SentinelManagedConnection
+    sends a PING command right after establishing the connection.
+    """
+
+
+class SentinelBlockingConnectionPool(
+    _SentinelConnectionPoolMixin,
+    BlockingConnectionPool,
+):
+    """
+    Sentinel blocking connection pool.
+
+    If ``check_connection`` flag is set to True, SentinelManagedConnection
+    sends a PING command right after establishing the connection.
+    """
 
 
 class Sentinel(AsyncSentinelCommands):
